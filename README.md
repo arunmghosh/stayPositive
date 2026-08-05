@@ -44,10 +44,41 @@ I trained the model by having it play against greedy and random bots in a total 
 I used a policy and target DQN structure with a replay buffer capacity of 100000, fixed learning rate of 0.0001, batch size of 64, tau = 0.005 (soft-update rate), and gamma = 0.99 (future reward multiplier, so model could think ahead). The performance of the model was initially evaluated by the win rate for the 3-player version, but this metric collapsed in the 6-9 player version. Instead, I looked at the average score and consistency of score, in which the DQN surpassed random but not greedy. 
 
 ## What "Stay Positive" Looks Like
-Show an example input → model output.
+![User Interface](images/stay_positive_snapshot.png)
 
 ## Installation
 ```bash
-git clone ...
-cd ...
+git clone https://github.com/arunmghosh/stayPositive
+cd path/to/your/folder
 pip install -r requirements.txt
+```
+
+## Verification & Quickstart
+
+Once installation is complete, verify that the environment and model checkpoints load properly by running any of the following commands:
+
+### 1. Play Interactive Game
+Play an interactive CLI game against the trained Deep Q-Network (DQN) agent:
+
+```bash
+python3 play.py
+```
+
+### 2. Train a New Agent
+Start training a new DQN agent from scratch:
+
+```bash
+python3 train.py
+```
+
+### 3. Evaluate Model Performance
+Benchmark trained model checkpoints against baseline agents (Greedy and Random):
+
+```bash
+# Evaluate final trained agent
+python3 evaluate.py
+
+# Evaluate progression across checkpoints (0 to 12,000 episodes)
+python3 evaluate_checkpoints.py
+```
+
