@@ -32,22 +32,18 @@ choices made to improve the score.
 
 ## Approach
 
-### 1. Data / Problem Formulation
-Explain the input and output.
+### 1. Data Formulation
+The input to the model was the state of the game each time the DQN agent had to make a decision (play a card). This consisted of the player hand, top card, cards already played, relative score v.s. leader, and relative score v.s. next player. The output was a single decision: which card in the player hand should be played.  
 
 ### 2. Model Architecture
-Explain the models and why you chose them.
+I chose to use a Deep Q Network (DQN) because it would not be practical to know the entire Q-table for "Stay Positive" given the number of permutations in which the 54 cards could be played. There was also no game history that a traditional feed-forward neural network could learn from, since the game had just been invented, so a reinforcement-learning model was ideal.  
 
-### 3. Training / Evaluation
-Explain how you trained and evaluated the system.
+### 3. Training & Evaluation
+I trained the model by having it play against greedy and random bots in a total of 12000 episodes. The performance against random was meant to gauge if there was a strategy component at all, and performance against greedy (a strategy I came up with) was meant to measure the efficacy of the DQN's strategy. 
 
-## Experiments
-Describe the experiments you ran and what you learned.
+I used a policy and target DQN structure with a replay buffer capacity of 100000, fixed learning rate of 0.0001, batch size of 64, tau = 0.005 (soft-update rate), and gamma = 0.99 (future reward multiplier, so model could think ahead). The performance of the model was initially evaluated by the win rate for the 3-player version, but this metric collapsed in the 6-9 player version. Instead, I looked at the average score and consistency of score, in which the DQN surpassed random but not greedy. 
 
-## Results
-Include tables, graphs, and visualizations.
-
-## Example
+## What "Stay Positive" Looks Like
 Show an example input → model output.
 
 ## Installation
