@@ -4,8 +4,9 @@ import random
 import os
 from env import StayPositiveEnv
 from agent import DQNAgent
-from game import get_card_suit, get_card_value, get_card_effective_value
+from game import get_card_suit, get_card_value, get_card_effective_value, calculate_turn_score
 import math
+import argparse
 
 # Baseline Agent Selectors
 def select_random_action(action_mask):
@@ -19,34 +20,10 @@ def select_greedy_action(game, player_idx):
     
     best_score = -float('inf')
     best_cards = []
+    diamond_is_zero = getattr(game, 'diamond_is_zero', False)
     
     for card in valid_cards:
-        # Simulate play to calculate immediate turn score
-        turn_score = 0.0
-        if game.top_card is None:
-            # Initial Turn
-            if get_card_suit(card) == 4: # JOKER
-                turn_score = 0.0
-            else:
-                turn_score = get_card_effective_value(card)
-        else:
-            played_suit = get_card_suit(card)
-            top_suit = get_card_suit(game.top_card)
-            
-            if played_suit == 4 or top_suit == 4: # JOKER
-                turn_score = 0.0
-            else:
-                T = get_card_effective_value(game.top_card)
-                v = get_card_value(card)
-                if played_suit == 0: # HEARTS
-                    turn_score = math.floor(T + v)
-                elif played_suit == 1: # DIAMONDS
-                    turn_score = math.floor(T * v)
-                elif played_suit == 2: # SPADES
-                    turn_score = math.floor(T / v)
-                elif played_suit == 3: # CLUBS
-                    turn_score = math.floor(T - v)
-        
+        turn_score = calculate_turn_score(game.top_card, card, diamond_is_zero)
         if turn_score > best_score:
             best_score = turn_score
             best_cards = [card]
@@ -55,14 +32,14 @@ def select_greedy_action(game, player_idx):
             
     return random.choice(best_cards)
 
-def run_evaluation(agent, num_games=100, num_players=6):
+def run_evaluation(agent, num_games=100, num_players=6, diamond_is_zero=False):
     """
     Evaluates the DQN agent against:
     - Player 0: DQN
     - Player 1: Greedy
     - Player 2: Random
     """
-    env = StayPositiveEnv()
+    env = StayPositiveEnv(diamond_is_zero=diamond_is_zero)
     game_ind = num_players - env.min_players
     num_dqn_agents = float(num_players/3)
     num_greedy_bots = float(math.ceil((num_players - num_dqn_agents)/2.0))
@@ -108,12 +85,20 @@ def run_evaluation(agent, num_games=100, num_players=6):
     return win_rates, avg_scores
 
 def main():
-    num_episodes = 12000
+    parser = argparse.ArgumentParser(description="Train DQN Agent for Stay Positive Card Game")
+    parser.add_argument("--diamond-zero", "--diamond-is-zero", dest="diamond_is_zero", action="store_true",
+                        help="Enable rule where effective value of Diamond cards is 0")
+    parser.add_argument("--episodes", type=int, default=12000, help="Number of training episodes")
+    parser.add_argument("--save-path", type=str, default="stay_positive_dqn.pth", help="Model output file path")
+    args = parser.parse_args()
+
+    num_episodes = args.episodes
     eval_interval = 1000
-    save_path = "stay_positive_dqn.pth"
+    save_path = args.save_path
+    diamond_is_zero = args.diamond_is_zero
     
     # Initialize environment and agent
-    env = StayPositiveEnv()
+    env = StayPositiveEnv(diamond_is_zero=diamond_is_zero)
     state_dim = env.observation_space_size
     agent = DQNAgent(state_dim=state_dim, action_dim=54, lr=1e-4)
     
@@ -131,7 +116,7 @@ def main():
     epsilon_end = 0.05
     epsilon_decay_episodes = 9000
     
-    print(f"Starting training on device: {agent.device}")
+    print(f"Starting training on device: {agent.device} (Diamond=0 Rule: {diamond_is_zero})")
     print(f"State Dim: {state_dim}, Action Dim: 54")
     
     losses = []
@@ -235,7 +220,7 @@ def main():
             
         # Logging & Evaluation
         if episode % eval_interval == 0:
-            win_rates, avg_scores = run_evaluation(agent, num_games=100)
+            win_rates, avg_scores = run_evaluation(agent, num_games=100, diamond_is_zero=diamond_is_zero)
             avg_loss = np.mean(losses[-100:]) if losses else 0.0
             print(f"Episode {episode}/{num_episodes} | Epsilon: {epsilon:.3f} | Avg Loss: {avg_loss:.4f}")
             print(f"  Win Rates: DQN: {win_rates[0]:.2f} | Greedy: {win_rates[1]:.2f} | Random: {win_rates[2]:.2f}")

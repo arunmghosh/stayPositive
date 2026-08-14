@@ -7,15 +7,17 @@ from env import StayPositiveEnv
 from agent import DQNAgent
 from train import select_greedy_action, select_random_action
 
-def evaluate_agents(agent_path, num_games=1000, num_players=6, artifact_dir=None):
-    env = StayPositiveEnv()
+import argparse
+
+def evaluate_agents(agent_path, num_games=1000, num_players=6, artifact_dir=None, diamond_is_zero=False):
+    env = StayPositiveEnv(diamond_is_zero=diamond_is_zero)
     state_dim = env.observation_space_size
     
     # Load DQN Agent
     dqn_agent = DQNAgent(state_dim=state_dim, action_dim=54)
     if os.path.exists(agent_path):
         dqn_agent.load(agent_path)
-        print(f"Loaded trained agent from {agent_path}")
+        print(f"Loaded trained agent from {agent_path} (Diamond=0 Rule: {diamond_is_zero})")
     else:
         print(f"Warning: {agent_path} not found! Evaluating an untrained agent.")
 
@@ -128,8 +130,19 @@ def evaluate_agents(agent_path, num_games=1000, num_players=6, artifact_dir=None
     plt.close()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Evaluate Stay Positive DQN Agent")
+    parser.add_argument("--agent-path", type=str, default="stay_positive_dqn.pth", help="Path to saved model")
+    parser.add_argument("--num-games", type=int, default=1000, help="Number of games to evaluate")
+    parser.add_argument("--num-players", type=int, default=6, help="Number of players")
+    parser.add_argument("--diamond-zero", "--diamond-is-zero", dest="diamond_is_zero", action="store_true",
+                        help="Enable rule where effective value of Diamond cards is 0")
+    parser.add_argument("--artifact-dir", type=str, default=None, help="Directory to save evaluation plots")
+    args = parser.parse_args()
+
     evaluate_agents(
-        agent_path="stay_positive_dqn.pth",
-        num_games=1000,
-        artifact_dir="/Users/arunghosh/.gemini/antigravity-ide/brain/5c0780a9-d05c-46f3-b7d0-7757b58bac85"
+        agent_path=args.agent_path,
+        num_games=args.num_games,
+        num_players=args.num_players,
+        artifact_dir=args.artifact_dir,
+        diamond_is_zero=args.diamond_is_zero
     )

@@ -4,8 +4,10 @@ from env import StayPositiveEnv
 from agent import DQNAgent
 from train import run_evaluation
 
-def evaluate_checkpoint(agent_path, num_games=200, num_players=6):
-    env = StayPositiveEnv()
+import argparse
+
+def evaluate_checkpoint(agent_path, num_games=200, num_players=6, diamond_is_zero=False):
+    env = StayPositiveEnv(diamond_is_zero=diamond_is_zero)
     state_dim = env.observation_space_size
     agent = DQNAgent(state_dim=state_dim, action_dim=54)
     
@@ -15,9 +17,20 @@ def evaluate_checkpoint(agent_path, num_games=200, num_players=6):
         
     agent.load(agent_path)
     
-    return run_evaluation(agent, num_games, num_players)
+    return run_evaluation(agent, num_games, num_players, diamond_is_zero=diamond_is_zero)
 
 def main():
+    parser = argparse.ArgumentParser(description="Evaluate DQN Checkpoints for Stay Positive")
+    parser.add_argument("--diamond-zero", "--diamond-is-zero", dest="diamond_is_zero", action="store_true",
+                        help="Enable rule where effective value of Diamond cards is 0")
+    parser.add_argument("--num-games", type=int, default=200, help="Number of games per checkpoint")
+    parser.add_argument("--num-players", type=int, default=6, help="Number of players")
+    args = parser.parse_args()
+
+    diamond_is_zero = args.diamond_is_zero
+    num_games = args.num_games
+    num_players = args.num_players
+
     checkpoints = {
         0: "stay_positive_dqn_0.pth",
         3000: "stay_positive_dqn_3000.pth",
@@ -31,7 +44,7 @@ def main():
         checkpoints[12000] = "stay_positive_dqn.pth"
         
     print("=" * 60)
-    print("Evaluating DQN Checkpoints (DQN vs Greedy vs Random)")
+    print(f"Evaluating DQN Checkpoints (DQN vs Greedy vs Random) [Diamond=0 Rule: {diamond_is_zero}]")
     print("=" * 60)
     print(f"{'Episodes':<10} | {'DQN Win Rate':<12} | {'Greedy Win Rate':<15} | {'Random Win Rate':<15}")
     print("-" * 60)
@@ -48,7 +61,7 @@ def main():
         if not os.path.exists(path):
             continue
             
-        win_rates, avg_scores = evaluate_checkpoint(path, num_games=200)
+        win_rates, avg_scores = evaluate_checkpoint(path, num_games=num_games, num_players=num_players, diamond_is_zero=diamond_is_zero)
         if win_rates is None:
             continue
             

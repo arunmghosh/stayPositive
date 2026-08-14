@@ -3,10 +3,11 @@ from game import StayPositiveGame, get_card_suit, get_card_value
 import math
 
 class StayPositiveEnv:
-    def __init__(self, min_players=6, max_players=9, seed=None):
+    def __init__(self, min_players=6, max_players=9, seed=None, diamond_is_zero=False):
         self.min_players = min_players
         self.max_players = max_players
-        self.games = [StayPositiveGame(num_players=i, seed=seed) for i in range(self.min_players, self.max_players + 1)]
+        self.diamond_is_zero = diamond_is_zero
+        self.games = [StayPositiveGame(num_players=i, seed=seed, diamond_is_zero=diamond_is_zero) for i in range(self.min_players, self.max_players + 1)]
         self.current_game_ind = 0  # switch game size every episode
         self.observation_space_size = 165  # 54 + 55 + 54 + 2
         self.action_space_size = 54

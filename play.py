@@ -5,8 +5,9 @@ import random
 import numpy as np
 import torch
 import math
+import argparse
 
-from game import StayPositiveGame, get_card_name, get_card_suit, get_card_value, get_card_effective_value
+from game import StayPositiveGame, get_card_name, get_card_suit, get_card_value, get_card_effective_value, calculate_turn_score
 from env import StayPositiveEnv
 from agent import DQNAgent
 from train import select_greedy_action, select_random_action
@@ -46,6 +47,11 @@ def print_game_header(game, user_player_idx, dqn_player_idx, roles):
     print("=" * 60)
 
 def main():
+    parser = argparse.ArgumentParser(description="Play Stay Positive Card Game interactively")
+    parser.add_argument("--diamond-zero", "--diamond-is-zero", dest="diamond_is_zero", action="store_true",
+                        help="Enable rule where effective value of Diamond cards is 0")
+    args = parser.parse_args()
+
     clear_screen()
     print("Welcome to Stay Positive Interactive Play!")
     
@@ -87,12 +93,19 @@ def main():
             pass
         print("Invalid choice. Please select a valid number.")
         
+    # Rule toggle prompt if not explicitly passed in command line arguments
+    diamond_is_zero = args.diamond_is_zero
+    if not diamond_is_zero:
+        dz_input = input("\nEnable rule where effective value of Diamond card is 0? [y/N]: ").strip().lower()
+        if dz_input in ["y", "yes"]:
+            diamond_is_zero = True
+            
     # Load DQNAgent 
-    env = StayPositiveEnv()
+    env = StayPositiveEnv(diamond_is_zero=diamond_is_zero)
     dqn_state_dim = env.observation_space_size 
     dqn_agent = DQNAgent(state_dim=dqn_state_dim, action_dim=54)
     dqn_agent.load(selected_model_path)
-    print(f"\nLoaded DQN model from {selected_model_path}")
+    print(f"\nLoaded DQN model from {selected_model_path} (Diamond=0 Rule: {diamond_is_zero})")
     
     # 2. Number of bots (default 4, max total players 9)
     # total_players = 1 (user) + 1 (dqn) + num_bots
@@ -199,24 +212,10 @@ def main():
             print("YOUR TURN! Here is your hand:")
             hand = game.hands[user_player_idx]
             for idx, card in enumerate(hand):
-                suit = get_card_suit(card)
-                val = get_card_value(card)
-                eff = get_card_effective_value(card)
-                
-                # Show action values for user clarity
+                eff = get_card_effective_value(card, game.diamond_is_zero)
                 eff_str = f"eff={eff:.2f}"
-                if game.top_card is not None:
-                    # Show predicted score if played
-                    T = get_card_effective_value(game.top_card)
-                    top_suit = get_card_suit(game.top_card)
-                    if suit == 4 or top_suit == 4: # joker found
-                        pred = 0
-                    else:
-                        if suit == 0: pred = math.floor(T + val)
-                        elif suit == 1: pred = math.floor(T * val)
-                        elif suit == 2: pred = math.floor(T / val)
-                        elif suit == 3: pred = math.floor(T - val)
-                    eff_str += f", projected score={pred}"
+                pred = calculate_turn_score(game.top_card, card, game.diamond_is_zero)
+                eff_str += f", projected score={pred:.0f}"
                 print(f"  [{idx + 1}] {get_card_name(card)} ({eff_str})")
                 
             # Ask for input

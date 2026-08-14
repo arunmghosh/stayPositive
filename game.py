@@ -31,19 +31,42 @@ def get_card_value(card_idx):
         return 0  # Joker value is represented as 0
     return (card_idx % 13) + 1
 
-def get_card_effective_value(card_idx):
+def get_card_effective_value(card_idx, diamond_is_zero=False):
     suit = get_card_suit(card_idx)
     v = get_card_value(card_idx)
     if suit == HEARTS:
         return float(v)
     elif suit == DIAMONDS:
-        return float(v)
+        return 0.0 if diamond_is_zero else float(v)
     elif suit == SPADES:
         return 1.0 / v
     elif suit == CLUBS:
         return float(-v)
     elif suit == JOKER:
         return 0.0
+
+def calculate_turn_score(top_card, card_idx, diamond_is_zero=False):
+    if top_card is None:
+        if get_card_suit(card_idx) == JOKER:
+            return 0.0
+        else:
+            return float(math.floor(get_card_effective_value(card_idx, diamond_is_zero)))
+    else:
+        played_suit = get_card_suit(card_idx)
+        top_suit = get_card_suit(top_card)
+        if played_suit == JOKER or top_suit == JOKER:
+            return 0.0
+        else:
+            T = get_card_effective_value(top_card, diamond_is_zero)
+            v = get_card_value(card_idx)
+            if played_suit == HEARTS:
+                return float(math.floor(T + v))
+            elif played_suit == DIAMONDS:
+                return float(math.floor(T * v))
+            elif played_suit == SPADES:
+                return float(math.floor(T / v))
+            elif played_suit == CLUBS:
+                return float(math.floor(T - v))
 
 def get_card_name(card_idx):
     suit = get_card_suit(card_idx)
@@ -53,8 +76,9 @@ def get_card_name(card_idx):
     return f"{VALUE_NAMES[value]} of {SUIT_NAMES[suit]}"
 
 class StayPositiveGame:
-    def __init__(self, num_players=3, seed=None):
+    def __init__(self, num_players=3, seed=None, diamond_is_zero=False):
         self.num_players = num_players
+        self.diamond_is_zero = diamond_is_zero
         if seed is not None:
             random.seed(seed)
         self.reset()
@@ -105,38 +129,7 @@ class StayPositiveGame:
         self.played_cards.add(card_idx)
 
         # Calculate turn score
-        turn_score = 0.0
-        
-        if self.top_card is None:
-            # Initial Turn
-            if get_card_suit(card_idx) == JOKER:
-                # Joker played on initial turn results in 0 score
-                turn_score = 0.0
-            else:
-                # Effective value, round down to nearest integer
-                turn_score = math.floor(get_card_effective_value(card_idx))
-        else:
-            # Subsequent Turns
-            # Check Joker rules
-            played_suit = get_card_suit(card_idx)
-            top_suit = get_card_suit(self.top_card)
-            
-            if played_suit == JOKER or top_suit == JOKER:
-                # Jokers are instant nullifiers resulting in a score of 0 when played or played on top of
-                turn_score = 0.0
-            else:
-                T = get_card_effective_value(self.top_card)
-                v = get_card_value(card_idx)
-                
-                # Operation depending on the played card's suit
-                if played_suit == HEARTS:
-                    turn_score = math.floor(T + v)
-                elif played_suit == DIAMONDS:
-                    turn_score = math.floor(T * v)
-                elif played_suit == SPADES:
-                    turn_score = math.floor(T / v)
-                elif played_suit == CLUBS:
-                    turn_score = math.floor(T - v)
+        turn_score = calculate_turn_score(self.top_card, card_idx, self.diamond_is_zero)
         
         # Add score
         self.scores[player_idx] += turn_score
