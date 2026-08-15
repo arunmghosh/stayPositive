@@ -49,9 +49,12 @@ I used a policy and target DQN structure with a replay buffer capacity of 100000
 ![User Interface](images/stay_positive_snapshot.png)
 
 ## Installation
+
+Clone the repository and install the required dependencies:
+
 ```bash
-git clone https://github.com/arunmghosh/stayPositive
-cd path/to/your/folder
+git clone https://github.com/arunmghosh/stayPositive.git
+cd stayPositive
 pip install -r requirements.txt
 ```
 
@@ -60,27 +63,31 @@ pip install -r requirements.txt
 Once installation is complete, verify that the environment and model checkpoints load properly by running any of the following commands:
 
 ### 1. Play Interactive Game
-Play an interactive CLI game against the trained Deep Q-Network (DQN) agent:
+Play an interactive CLI game directly against the trained Deep Q-Network (DQN) agent and baseline bots:
 
 ```bash
 python3 play.py
 ```
 
-### 2. Train a New Agent
-Start training a new DQN agent from scratch:
+### 2. Interactive Game Replay & Move Inspection
+Simulate 10 9-player games in memory and step through any game turn-by-turn with an interactive move-by-move viewer:
+
+```bash
+python3 evaluate.py
+```
+
+### 3. Evaluate Checkpoint Progression
+Benchmark model checkpoints (0 to 12,000 episodes) against Greedy and Random baselines, and save a progression plot to `images/checkpoints_evaluation.png`:
+
+```bash
+python3 evaluate_checkpoints.py
+```
+
+### 4. Train a New Agent
+Train 3 separate DQN agents against Greedy and Random baseline bots over 12,000 training episodes:
 
 ```bash
 python3 train.py
 ```
-
-### 3. Evaluate Model Performance
-Benchmark trained model checkpoints against baseline agents (Greedy and Random):
-
-```bash
-# Evaluate final trained agent
-python3 evaluate.py
-
-# Evaluate progression across checkpoints (0 to 12,000 episodes)
-python3 evaluate_checkpoints.py
-```
+*(Optional flag: Add `--diamond-zero` to any script to enable the Diamond=0 rule variant)*
 
