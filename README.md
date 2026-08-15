@@ -30,6 +30,8 @@ game. While the DQN significantly outperformed random bots in the many-player ga
 inadvertent collusion (greedy is a best response to greedy). Nonetheless, the positive difference from random still suggests deliberate 
 choices made to improve the score. 
 
+RULE UPDATE: To address greedy collusion, I added an option to add a rule where diamond cards have zero intrinsic value, so a diamond played on top of a diamond gives zero instead of the product of the two card values. This nerf to the greedy strategy improved the DQN win rate in 6-9 player games to nearly 50%. 
+
 ## Approach
 
 ### 1. Data Formulation
@@ -41,7 +43,7 @@ I chose to use a Deep Q Network (DQN) because it would not be practical to know 
 ### 3. Training & Evaluation
 I trained the model by having it play against greedy and random bots in a total of 12000 episodes. The performance against random was meant to gauge if there was a strategy component at all, and performance against greedy (a strategy I came up with) was meant to measure the efficacy of the DQN's strategy. 
 
-I used a policy and target DQN structure with a replay buffer capacity of 100000, fixed learning rate of 0.0001, batch size of 64, tau = 0.005 (soft-update rate), and gamma = 0.99 (future reward multiplier, so model could think ahead). The performance of the model was initially evaluated by the win rate for the 3-player version, but this metric collapsed in the 6-9 player version. Instead, I looked at the average score and consistency of score, in which the DQN surpassed random but not greedy. 
+I used a policy and target DQN structure with a replay buffer capacity of 100000, fixed learning rate of 0.0001, batch size of 64, tau = 0.005 (soft-update rate), and gamma = 0.99 (future reward multiplier, so model could think ahead). The performance of the model was evaluated by the win rate at different training checkpoints. 
 
 ## What "Stay Positive" Looks Like
 ![User Interface](images/stay_positive_snapshot.png)
