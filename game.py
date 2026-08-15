@@ -69,6 +69,8 @@ def calculate_turn_score(top_card, card_idx, diamond_is_zero=False):
                 return float(math.floor(T - v))
 
 def get_card_name(card_idx):
+    if card_idx is None:
+        return "EMPTY"
     suit = get_card_suit(card_idx)
     value = get_card_value(card_idx)
     if suit == JOKER:
