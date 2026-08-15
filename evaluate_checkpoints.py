@@ -17,7 +17,7 @@ def evaluate_checkpoint(agent_path, num_games=200, num_players=6, diamond_is_zer
         
     agent.load(agent_path)
     
-    return run_evaluation(agent, num_games, num_players, diamond_is_zero=diamond_is_zero)
+    return run_evaluation([agent, agent], num_games=num_games, diamond_is_zero=diamond_is_zero)
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate DQN Checkpoints for Stay Positive")
@@ -89,11 +89,18 @@ def main():
         plt.grid(True, linestyle='--', alpha=0.7)
         plt.legend(fontsize=11)
         
-        # Save to artifact directory
-        artifact_dir = "/Users/arunghosh/.gemini/antigravity-ide/brain/2e3a5d6e-45b9-491e-af8b-34f6d438c863"
-        os.makedirs(artifact_dir, exist_ok=True)
-        plot_path = os.path.join(artifact_dir, "checkpoints_evaluation.png")
+        # Save to images directory
+        images_dir = "images"
+        os.makedirs(images_dir, exist_ok=True)
+        plot_path = os.path.join(images_dir, "checkpoints_evaluation.png")
         plt.savefig(plot_path, dpi=150)
+        
+        # Save copy to current artifact directory
+        artifact_dir = "/Users/arunghosh/.gemini/antigravity-ide/brain/9b3086a0-d067-46dc-a489-894d95c9795d"
+        if os.path.exists(artifact_dir):
+            artifact_plot_path = os.path.join(artifact_dir, "checkpoints_evaluation.png")
+            plt.savefig(artifact_plot_path, dpi=150)
+            
         plt.close()
         print(f"\nGenerated progression plot saved to {plot_path}")
     else:
