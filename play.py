@@ -188,7 +188,9 @@ def main():
     input("\nPress Enter to start the game...")
     
     # Initialize game
-    game = env.games[num_players - env.min_players]
+    game_idx = num_players - env.min_players
+    env.current_game_ind = game_idx
+    game = env.games[game_idx]
     dqn_decisions = {"top_cards": [], "hands": [], "choices": []}
     
     # Game Loop
